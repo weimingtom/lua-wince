@@ -4,8 +4,9 @@
 ** See Copyright Notice in lua.h
 */
 
-
+#ifndef _WIN32_WCE
 #include <signal.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,12 +99,13 @@ static void lstop (lua_State *L, lua_Debug *ar) {
 }
 
 
+#if !defined (_WIN32_WCE)
 static void laction (int i) {
   signal(i, SIG_DFL); /* if another SIGINT happens before lstop,
                               terminate process (default action) */
   lua_sethook(globalL, lstop, LUA_MASKCALL | LUA_MASKRET | LUA_MASKCOUNT, 1);
 }
-
+#endif
 
 static void print_usage (const char *badoption) {
   luai_writestringerror("%s: ", progname);
@@ -175,9 +177,13 @@ static int docall (lua_State *L, int narg, int nres) {
   lua_pushcfunction(L, traceback);  /* push traceback function */
   lua_insert(L, base);  /* put it under chunk and args */
   globalL = L;  /* to be available to 'laction' */
+#if !defined (_WIN32_WCE)
   signal(SIGINT, laction);
+#endif
   status = lua_pcall(L, narg, nres, base);
+#if !defined (_WIN32_WCE)
   signal(SIGINT, SIG_DFL);
+#endif
   lua_remove(L, base);  /* remove traceback function */
   return status;
 }
@@ -423,7 +429,11 @@ static int runargs (lua_State *L, char **argv, int n) {
   return 1;
 }
 
-
+#if defined (_WIN32_WCE)
+static int handle_luainit (lua_State *L) {
+  return dofile(L, "start.lua");
+}
+#else
 static int handle_luainit (lua_State *L) {
   const char *name = "=" LUA_INITVERSION;
   const char *init = getenv(name + 1);
@@ -437,7 +447,7 @@ static int handle_luainit (lua_State *L) {
   else
     return dostring(L, init, name);
 }
-
+#endif
 
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);

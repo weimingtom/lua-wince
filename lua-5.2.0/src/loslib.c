@@ -4,12 +4,14 @@
 ** See Copyright Notice in lua.h
 */
 
-
+#ifndef _WIN32_WCE
 #include <errno.h>
+#include <time.h>
+#endif
 #include <locale.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
+
 
 #define loslib_c
 #define LUA_LIB

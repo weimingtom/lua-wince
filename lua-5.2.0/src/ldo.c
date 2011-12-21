@@ -116,7 +116,11 @@ l_noret luaD_throw (lua_State *L, int errcode) {
         lua_unlock(L);
         G(L)->panic(L);  /* call it (last chance to jump out) */
       }
+#ifdef _WIN32_WCE
+      exit(EXIT_FAILURE);
+#else
       abort();
+#endif
     }
   }
 }

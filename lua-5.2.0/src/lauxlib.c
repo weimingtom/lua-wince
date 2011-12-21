@@ -4,8 +4,9 @@
 ** See Copyright Notice in lua.h
 */
 
-
+#ifndef _WIN32_WCE
 #include <errno.h>
+#endif
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -642,7 +643,12 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   if (skipcomment(&lf, &c))  /* read initial portion */
     lf.buff[lf.n++] = '\n';  /* add line to correct line numbers */
   if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
+#ifdef _WIN32_WCE
+    fclose(lf.f);
+    lf.f = fopen(filename, "rb");  /* reopen in binary mode */
+#else
     lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
+#endif
     if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
     skipcomment(&lf, &c);  /* re-read initial portion */
   }
