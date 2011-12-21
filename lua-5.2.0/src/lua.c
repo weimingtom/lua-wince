@@ -51,6 +51,8 @@
 #include <io.h>
 #include <stdio.h>
 #define lua_stdin_is_tty()      _isatty(_fileno(stdin))
+#elif defined(_WIN32_WCE)
+#define lua_stdin_is_tty()      0  /* ce no tty */
 #else
 #define lua_stdin_is_tty()      1  /* assume stdin is a tty */
 #endif
@@ -484,7 +486,11 @@ static int pmain (lua_State *L) {
       print_version();
       dotty(L);
     }
+#ifndef _WIN32_WCE
     else dofile(L, NULL);  /* executes stdin as a file */
+#else
+    else print_usage(NULL);
+#endif
   }
   lua_pushboolean(L, 1);  /* signal no errors */
   return 1;

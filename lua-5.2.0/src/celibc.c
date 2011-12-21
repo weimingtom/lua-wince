@@ -972,70 +972,11 @@ char *strdup( const char *str ) {
 	return ptr;
 }
 
-/*
-double strtod( const char *nptr, char const * *endptr ) {
-	int adv = 0;
-	double val = 0;
-
-	sscanf( nptr, " %lf%n", &val, &adv );
-	if( endptr )
-		*endptr = nptr + adv;
-
-	return val;
-}
-
-unsigned long strtoul( const char *nptr, char const **endptr, int base ) {
-	int adv = 0;
-	unsigned long  val = 0;
-
-	if( base == 16 )
-		sscanf( nptr, " %lx%n", &val, &adv );
-	else
-		sscanf( nptr, " %lu%n", &val, &adv );
-
-	if( endptr )
-		*endptr = nptr + adv;
-
-	return val;
-}
-*/
-
-/*
-char *strpbrk( const char *string, const char *strCharSet ) {
-	char flags[256/8];
-
-	memset( flags, 0, sizeof( flags ));
-	for( ; *strCharSet != '\0'; strCharSet++ ) {
-		flags[ *strCharSet/8 ] |= 1 << (*strCharSet % 8);
-	}
-
-	for( ; *string != '\0'; string++ ) {
-		if( flags[ *string/8 ] &  (1 << (*string % 8)))
-			return (char *)string;
-	}
-
+FILE *tmpfile() {
 	return NULL;
 }
-*/
-/* unconforming: this file should be removed at closing time */
-FILE *tmpfile() {
-	char buf[MAX_PATH];
-	tmpnam( buf );
-	return fopen( buf, "w+b" );
-}
 
-/* unconforming: should use static buffer in case of NULL param */
 char *tmpnam( char *str ) {
-/*
-	if( str == NULL ) {
-		char buf[MAX_PATH];
-		GetTempFileName( ".", pref, 1, buf );
-		return strdup( buf );
-	} else {
-		GetTempFileName( ".", pref, 1, str );
-		return str;
-	}
-*/
 	return NULL;
 }
 
@@ -1166,13 +1107,3 @@ struct lconv *localeconv( void )
 {
 	return NULL;
 }
-/*
-void *calloc( size_t num, size_t size ) {
-	void *ptr = malloc( num*size );
-	if( ptr )
-		memset( ptr, 0, num*size );
-	return ptr;
-}
-
-*/
-

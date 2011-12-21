@@ -88,7 +88,7 @@
 ** hierarchy or if you want to install your libraries in
 ** non-conventional directories.
 */
-#if defined(_WIN32)	/* { */
+#if defined(_WIN32)	|| defined(_WIN32_WCE) /* { */
 /*
 ** In Windows, any exclamation mark ('!') in the path is replaced by the
 ** path of the directory of the executable file of the current process.
@@ -120,7 +120,7 @@
 ** CHANGE it if your machine does not use "/" as the directory separator
 ** and is not Windows. (On Windows Lua automatically uses "\".)
 */
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN32_WCE)
 #define LUA_DIRSEP	"\\"
 #else
 #define LUA_DIRSEP	"/"
