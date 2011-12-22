@@ -135,6 +135,7 @@ struct lconv *localeconv( void );
 #define strerror(errnum) ("(unsupported)")
 extern int errno;
 
+FILE* _fopen(const char *filename, const char *flags);
 
 #endif
 

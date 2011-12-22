@@ -1107,3 +1107,68 @@ struct lconv *localeconv( void )
 {
 	return NULL;
 }
+
+
+static int file_exists(const char* filename) {
+  FILE* f = fopen(filename, "r");
+  if(f != NULL)
+  {
+    fclose(f);
+    return 1;
+  }
+  return 0;
+}
+
+static char* conv_filename(char *filename) {
+  size_t i;
+  for (i = 0; i < strlen(filename); i++) {
+    if (filename[i] == '/')
+      filename[i] = '\\';
+  }
+  return filename;
+}
+
+static char* find_file(const char* filename) {
+  char* fullpath = malloc(sizeof(char) * (MAX_PATH + 1));
+  if(!fullpath)
+    return NULL;
+
+  if (filename != NULL && strlen(filename) > 0)
+  {
+    if (filename[0] == '\\' || filename[0] == '/')//absolute path
+    {
+      if (file_exists(filename))
+      {
+        strcpy(fullpath, filename);
+        return conv_filename(fullpath);
+      }
+    }
+    else
+    {
+      TCHAR tpath[MAX_PATH + 1];
+      char* lastDash;
+      memset(tpath, 0, (MAX_PATH+1) * sizeof(TCHAR));
+      GetModuleFileName(NULL, tpath, MAX_PATH);
+      wcstombs(fullpath, tpath, MAX_PATH);
+      lastDash = strrchr(fullpath,'\\');  
+      fullpath[lastDash - fullpath+1] = 0;
+      strncat(fullpath, filename, MAX_PATH - strlen(filename));
+      if (file_exists(fullpath))
+      {
+        return conv_filename(fullpath);
+      }
+    }
+  }
+  free(fullpath);
+  return NULL;
+}
+
+FILE* _fopen(const char *filename, const char *flags) {
+  FILE *fp = NULL;
+  char *full_path = find_file(filename);
+  if (full_path) {
+    fp = fopen(full_path, flags);
+    free(full_path);
+  }
+  return fp;
+}

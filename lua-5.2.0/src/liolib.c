@@ -29,7 +29,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
-
+#ifdef _WIN32_WCE
+#define fopen _fopen 
+#endif
 
 /*
 ** {======================================================

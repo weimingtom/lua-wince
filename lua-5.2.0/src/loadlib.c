@@ -29,6 +29,9 @@
 #include "lauxlib.h"
 #include "lualib.h"
 
+#ifdef _WIN32_WCE
+#define fopen _fopen 
+#endif
 
 /*
 ** LUA_PATH and LUA_CPATH are the names of the environment
