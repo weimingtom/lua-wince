@@ -211,6 +211,75 @@ static lua_CFunction ll_sym (lua_State *L, void *lib, const char *sym) {
 
 /* }====================================================== */
 
+#elif defined (_WIN32_WCE)
+
+/*
+** {======================================================================
+** This is an implementation of loadlib for Windows using native functions.
+** =======================================================================
+*/
+
+#undef setprogdir
+
+static void setprogdir (lua_State *L) {
+  TCHAR tbuff[MAX_PATH + 1];
+  char buff[MAX_PATH + 1];
+  char *lb;
+  DWORD nsize = sizeof(buff)/sizeof(TCHAR);
+  DWORD n = GetModuleFileName(NULL, tbuff, nsize);
+  wcstombs(buff,tbuff,MAX_PATH);
+  if (n == 0 || n == nsize || (lb = strrchr(buff, '\\')) == NULL)
+    luaL_error(L, "unable to get ModuleFileName");
+  else {
+    *lb = '\0';
+    luaL_gsub(L, lua_tostring(L, -1), LUA_EXEC_DIR, buff);
+    lua_remove(L, -2);  /* remove original string */
+  }
+}
+
+static void pusherror (lua_State *L) {
+  int error = GetLastError();
+  TCHAR tbuffer[128];
+  char buffer[128];
+  if (FormatMessage(FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
+      NULL, error, 0, tbuffer, sizeof(tbuffer)/sizeof(TCHAR), NULL))
+  {
+	wcstombs(buffer,tbuffer,128);
+    lua_pushstring(L, buffer);
+  }
+  else
+    lua_pushfstring(L, "system error %d\n", error);
+}
+
+static void ll_unloadlib (void *lib) {
+  FreeLibrary((HMODULE)lib);
+}
+
+
+static void *ll_load (lua_State *L, const char *path, int seeglb) 
+{
+  unsigned short tpath[128];
+  HMODULE lib = 0;
+  memset(tpath,0,128*sizeof(TCHAR));
+  mbstowcs(tpath, path,strlen(path)+1);
+  lib = LoadLibrary(tpath);
+  (void)(seeglb);  /* not used: symbols are 'global' by default */
+  if (lib == NULL) pusherror(L);
+  return lib;
+}
+
+
+static lua_CFunction ll_sym (lua_State *L, void *lib, const char *sym) {
+  TCHAR tsym[MAX_PATH];
+  lua_CFunction f = 0;
+  memset(tsym,0,MAX_PATH*sizeof(TCHAR));
+  mbstowcs(tsym, sym,strlen(sym));
+ 
+  f = (lua_CFunction)GetProcAddress((HINSTANCE)lib, tsym);
+  if (f == NULL) pusherror(L);
+  return f;
+}
+
 
 #else
 /*
