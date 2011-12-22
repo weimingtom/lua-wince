@@ -259,12 +259,12 @@ time_t mktime(struct tm *tptr)
 {
 	SYSTEMTIME st;
 
-	DWORD day = 0;
-	DWORD year = 0;
-	DWORD seconds = 0;
-	DWORD overflow;
-	DWORD tm_year;
-	DWORD yday, month;
+	int day = 0;
+	int year = 0;
+	int seconds = 0;
+	int overflow;
+	int tm_year;
+	int yday, month;
 
 	TmToSystemTime(tptr, &st);
 	SetTz(&st);
