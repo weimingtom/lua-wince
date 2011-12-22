@@ -156,6 +156,7 @@
 				DelayLoadDLLs="$(NOINHERIT)"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile="$(OutDir)/lua52dll.pdb"
+				GenerateMapFile="true"
 				SubSystem="0"
 				StackReserveSize="65536"
 				StackCommitSize="4096"

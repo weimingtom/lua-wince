@@ -432,11 +432,14 @@ static int runargs (lua_State *L, char **argv, int n) {
 }
 
 #if defined (_WIN32_WCE)
-static int handle_luainit (lua_State *L) {
-  return dofile(L, "start.lua");
+static int handle_luainit (lua_State *L, int argc) {
+  if (argc < 2) {
+    return dofile(L, "start.lua");
+  }
+  return 0;
 }
 #else
-static int handle_luainit (lua_State *L) {
+static int handle_luainit (lua_State *L, int argc) {
   const char *name = "=" LUA_INITVERSION;
   const char *init = getenv(name + 1);
   if (init == NULL) {
@@ -473,7 +476,7 @@ static int pmain (lua_State *L) {
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
   luaL_openlibs(L);  /* open libraries */
   lua_gc(L, LUA_GCRESTART, 0);
-  if (!args[has_E] && handle_luainit(L) != LUA_OK)
+  if (!args[has_E] && handle_luainit(L, argc) != LUA_OK)
     return 0;  /* error running LUA_INIT */
   /* execute arguments -e and -l */
   if (!runargs(L, argv, (script > 0) ? script : argc)) return 0;
@@ -488,8 +491,6 @@ static int pmain (lua_State *L) {
     }
 #ifndef _WIN32_WCE
     else dofile(L, NULL);  /* executes stdin as a file */
-#else
-    else print_usage(NULL);
 #endif
   }
   lua_pushboolean(L, 1);  /* signal no errors */

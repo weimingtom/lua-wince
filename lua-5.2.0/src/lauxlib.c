@@ -6,6 +6,8 @@
 
 #ifndef _WIN32_WCE
 #include <errno.h>
+#else
+#include <windows.h>
 #endif
 #include <stdarg.h>
 #include <stdio.h>
@@ -32,8 +34,8 @@
 */
 
 
-#define LEVELS1	12	/* size of the first part of the stack */
-#define LEVELS2	10	/* size of the second part of the stack */
+#define LEVELS1 12  /* size of the first part of the stack */
+#define LEVELS2 10  /* size of the second part of the stack */
 
 
 
@@ -222,7 +224,7 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 }
 
 
-#if !defined(inspectstat)	/* { */
+#if !defined(inspectstat) /* { */
 
 #if defined(LUA_USE_POSIX)
 
@@ -241,7 +243,7 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
 
 #endif
 
-#endif				/* } */
+#endif        /* } */
 
 
 LUALIB_API int luaL_execresult (lua_State *L, int stat) {
@@ -428,7 +430,7 @@ LUALIB_API lua_Unsigned luaL_optunsigned (lua_State *L, int narg,
 ** check whether buffer is using a userdata on the stack as a temporary
 ** buffer
 */
-#define buffonstack(B)	((B)->b != (B)->initb)
+#define buffonstack(B)  ((B)->b != (B)->initb)
 
 
 /*
@@ -516,7 +518,7 @@ LUALIB_API char *luaL_buffinitsize (lua_State *L, luaL_Buffer *B, size_t sz) {
 */
 
 /* index of free-list header */
-#define freelist	0
+#define freelist  0
 
 
 LUALIB_API int luaL_ref (lua_State *L, int t) {
@@ -624,6 +626,77 @@ static int skipcomment (LoadF *lf, int *cp) {
   else return 0;  /* no comment */
 }
 
+#ifdef _WIN32_WCE
+
+static int file_exists(const char* filename) {
+  FILE* f = fopen(filename, "r");
+  if(f != NULL)
+  {
+    fclose(f);
+    return 1;
+  }
+  return 0;
+}
+
+static char* conv_filename(char *filename) {
+  size_t i;
+  for (i = 0; i < strlen(filename); i++) {
+    if (filename[i] == '/')
+      filename[i] = '\\';
+  }
+  return filename;
+}
+
+static char* find_file(const char* filename) {
+  char* fullpath = malloc(sizeof(char) * (MAX_PATH + 1));
+  if(!fullpath)
+    return NULL;
+
+  if (filename != NULL && strlen(filename) > 0)
+  {
+    if (filename[0] == '\\' || filename[0] == '/')//absolute path
+    {
+      if (file_exists(filename))
+      {
+        strcpy(fullpath, filename);
+        return conv_filename(fullpath);
+      }
+    }
+    else
+    {
+      TCHAR tpath[MAX_PATH + 1];
+      char* lastDash;
+      memset(tpath, 0, (MAX_PATH+1) * sizeof(TCHAR));
+      GetModuleFileName(NULL, tpath, MAX_PATH);
+      wcstombs(fullpath, tpath, MAX_PATH);
+      lastDash = strrchr(fullpath,'\\');  
+      fullpath[lastDash - fullpath+1] = 0;
+      strncat(fullpath, filename, MAX_PATH - strlen(filename));
+      if (file_exists(fullpath))
+      {
+        return conv_filename(fullpath);
+      }
+    }
+  }
+  free(fullpath);
+  return NULL;
+}
+
+FILE* _fopen(const char *filename, const char *flags) {
+  FILE *fp = NULL;
+  char *full_path = find_file(filename);
+  if (full_path) {
+    fp = fopen(full_path, flags);
+    free(full_path);
+  }
+  return fp;
+}
+
+#else
+
+#define _fopen fopen
+
+#endif
 
 LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
                                              const char *mode) {
@@ -637,7 +710,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   }
   else {
     lua_pushfstring(L, "@%s", filename);
-    lf.f = fopen(filename, "r");
+    lf.f = _fopen(filename, "r");
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
   }
   if (skipcomment(&lf, &c))  /* read initial portion */
@@ -645,7 +718,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   if (c == LUA_SIGNATURE[0] && filename) {  /* binary file? */
 #ifdef _WIN32_WCE
     fclose(lf.f);
-    lf.f = fopen(filename, "rb");  /* reopen in binary mode */
+    lf.f = _fopen(filename, "rb");  /* reopen in binary mode */
 #else
     lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
 #endif
