@@ -7,6 +7,8 @@
 #ifndef _WIN32_WCE
 #include <errno.h>
 #include <time.h>
+#else
+#include <windows.h>
 #endif
 #include <locale.h>
 #include <stdlib.h>
@@ -297,6 +299,24 @@ static int os_exit (lua_State *L) {
   return 0;
 }
 
+#if defined(_WIN32_WCE)
+static int os_pwd (lua_State *L) {
+  TCHAR tbuff[MAX_PATH + 1];
+  char buff[MAX_PATH + 1];
+  char *lb;
+  DWORD nsize = sizeof(buff)/sizeof(TCHAR);
+  DWORD n = GetModuleFileName(NULL, tbuff, nsize);
+  wcstombs(buff,tbuff,MAX_PATH);
+  if (n == 0 || n == nsize || (lb = strrchr(buff, '\\')) == NULL)
+    return luaL_error(L, "unable to get ModuleFileName");
+  else {
+    *lb = '\0';
+  }
+  lua_pushstring(L, buff);
+  return 1;
+}
+#endif
+
 
 static const luaL_Reg syslib[] = {
   {"clock",     os_clock},
@@ -310,6 +330,9 @@ static const luaL_Reg syslib[] = {
   {"setlocale", os_setlocale},
   {"time",      os_time},
   {"tmpname",   os_tmpname},
+#if defined(_WIN32_WCE)
+  {"exedir",    os_pwd},
+#endif
   {NULL, NULL}
 };
 
