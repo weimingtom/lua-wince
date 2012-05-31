@@ -1137,11 +1137,8 @@ static char* find_file(const char* filename) {
   {
     if (filename[0] == '\\' || filename[0] == '/')//absolute path
     {
-      if (file_exists(filename))
-      {
-        strcpy(fullpath, filename);
-        return conv_filename(fullpath);
-      }
+      strcpy(fullpath, filename);
+      return conv_filename(fullpath);
     }
     else
     {
@@ -1153,10 +1150,7 @@ static char* find_file(const char* filename) {
       lastDash = strrchr(fullpath,'\\');  
       fullpath[lastDash - fullpath+1] = 0;
       strncat(fullpath, filename, MAX_PATH - strlen(filename));
-      if (file_exists(fullpath))
-      {
-        return conv_filename(fullpath);
-      }
+      return conv_filename(fullpath);
     }
   }
   free(fullpath);
